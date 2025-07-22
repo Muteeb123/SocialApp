@@ -1,0 +1,31 @@
+
+
+Users => {
+    name,
+    email,
+    password
+}
+
+
+Friends => {
+    id,
+    sender,
+    receiver,
+    is_accepted,
+}
+
+Posts =>{
+    id,
+    user_id,
+    img_url,
+    No_of_likes,
+    No_of_comments,
+    caption,
+}
+
+comments =>{
+    id,
+    user_id,
+    post_id
+
+}
