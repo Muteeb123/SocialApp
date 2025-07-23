@@ -1,17 +1,23 @@
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { useEffect } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: '/posts',
     },
    
 ];
 
 export default function Dashboard() {
+
+    useEffect(()=>{
+;
+        router.get('posts');
+    },[])
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />

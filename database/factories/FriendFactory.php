@@ -16,12 +16,12 @@ class FriendFactory extends Factory
      */
     public function definition(): array
     {
+  
         $sender = User::factory()->create();
-        $receiver = User::factory()->create();
 
         return [
+            'receiver_id' => 1,
             'sender_id' => $sender->id,
-            'receiver_id' => $receiver->id,
             'is_accepted' => $this->faker->boolean(50),
         ];
     }
