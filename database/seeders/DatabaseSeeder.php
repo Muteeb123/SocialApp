@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Comment;
 use App\Models\Friend;
+use App\Models\Like;
 use App\Models\Post;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -15,6 +17,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Post::factory(100)->create();
+        Like::factory(500)->create()->each(function ($like) {
+            $post = $like->post;
+            $post->increment('no_of_likes');
+        });;
+        Comment::factory(500)->create()->each(function ($comment) {
+            $post = $comment->post;
+            $post->increment('no_of_comments');
+        });;
     }
 }

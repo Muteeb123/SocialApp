@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { useInitials } from '@/hooks/use-initials';
+import {usePage} from '@inertiajs/react';
 import {
     ThumbsUp,
     MessageCircle,
@@ -36,44 +37,75 @@ export default function Posts() {
     const containerRef = useRef<HTMLDivElement>(null);
     const loadTriggerRef = useRef<HTMLDivElement | null>(null);
     const lastPostRef = useRef<HTMLDivElement | null>(null);
+    const [currentPostIndex, setCurrentPostIndex] = useState<number>(-1);
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!containerRef.current) return;
+
+            const index = getCurrentPostIndex();
+            setCurrentPostIndex((prev) => {
+                if (prev !== index) {
+                    console.log('Current post:', posts[index]);
+                    return index;
+                }
+                return prev;
+            });
+        };
+
+        const container = containerRef.current;
+        if (container) {
+            container.addEventListener('scroll', handleScroll);
+        }
+
+        // Cleanup
+        return () => {
+            if (container) {
+                container.removeEventListener('scroll', handleScroll);
+            }
+        };
+    }, [posts]);
+
 
     const formatNumber = (num: number): string =>
         num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toString();
 
-    const fetchPost = async () => {
-        if (isLoading || !hasMore) return;
+   const groupId = usePage().props.groupId || null; // or pass as prop
 
-        setIsLoading(true);
-        try {
-            const query = new URLSearchParams();
-            seenIds.forEach((id) => query.append('seen_ids[]', id.toString()));
+const fetchPost = async () => {
+    if (isLoading || !hasMore) return;
 
-            const response = await fetch(`/how?${query.toString()}`, {
-                headers: { Accept: 'application/json' },
+    setIsLoading(true);
+    try {
+        const query = new URLSearchParams();
+        seenIds.forEach((id) => query.append('seen_ids[]', id.toString()));
+        if (groupId) query.append('group_id', groupId.toString());
+
+        const response = await fetch(`/how?${query.toString()}`, {
+            headers: { Accept: 'application/json' },
+        });
+
+        const data = await response.json();
+
+        if (data.posts && data.posts.length > 0) {
+            setPosts((prev) => {
+                const all = [...prev, ...data.posts];
+                const uniqueMap = new Map<number, Post>();
+                all.forEach((p) => uniqueMap.set(p.id, p));
+                return Array.from(uniqueMap.values());
             });
 
-            const data = await response.json();
-
-            if (data.posts && data.posts.length > 0) {
-                // Deduplicate based on post.id
-                setPosts((prev) => {
-                    const all = [...prev, ...data.posts];
-                    const uniqueMap = new Map<number, Post>();
-                    all.forEach((p) => uniqueMap.set(p.id, p));
-                    return Array.from(uniqueMap.values());
-                });
-
-                setSeenIds(data.seen_ids);
-            } else {
-                setHasMore(false);
-            }
-        } catch (err) {
-            console.error('Failed to fetch post:', err);
+            setSeenIds(data.seen_ids);
+        } else {
             setHasMore(false);
-        } finally {
-            setIsLoading(false);
         }
-    };
+    } catch (err) {
+        console.error('Failed to fetch post:', err);
+        setHasMore(false);
+    } finally {
+        setIsLoading(false);
+    }
+};
+
 
     useEffect(() => {
         fetchPost(); // initial load
@@ -88,7 +120,7 @@ export default function Posts() {
                     !isLoading &&
                     containerRef.current &&
                     containerRef.current.scrollTop + containerRef.current.clientHeight >=
-                        containerRef.current.scrollHeight - 10
+                    containerRef.current.scrollHeight - 10
                 ) {
                     fetchPost();
                 }
@@ -119,17 +151,17 @@ export default function Posts() {
         const containerCenter = containerTop + containerHeight / 2;
 
         const postElements = container.querySelectorAll('[data-post]');
-        
+
         for (let i = 0; i < postElements.length; i++) {
             const element = postElements[i] as HTMLElement;
             const elementTop = element.offsetTop;
             const elementBottom = elementTop + element.clientHeight;
-            
+
             if (containerCenter >= elementTop && containerCenter < elementBottom) {
                 return i;
             }
         }
-        
+
         return postElements.length - 1; // Default to last post if none found
     };
 
@@ -137,9 +169,10 @@ export default function Posts() {
         if (!containerRef.current || isLoading || posts.length === 0) return;
 
         const currentIndex = getCurrentPostIndex();
+        
         const isAtLastPost = currentIndex === posts.length - 1;
         const isAtSecondLastPost = currentIndex === posts.length - 2;
-        
+
         // If at last post and no more posts to fetch, do nothing
         if (!hasMore) {
             return;
@@ -149,17 +182,17 @@ export default function Posts() {
         if ((isAtSecondLastPost || isAtLastPost) && hasMore && !isLoading) {
             const postsCountBeforeFetch = posts.length;
             const currentIndexBeforeFetch = currentIndex;
-            
+
             await fetchPost();
-            
+
             // Wait a bit for the DOM to update with new posts
             setTimeout(() => {
-               
+
                 if (true) {
                     // New posts were loaded, scroll to the next post (one position forward)
                     const postElements = containerRef.current?.querySelectorAll('[data-post]');
                     const targetIndex = currentIndexBeforeFetch + 1;
-                   
+
                     if (postElements && targetIndex < postElements.length) {
                         const targetPost = postElements[targetIndex] as HTMLElement;
                         targetPost.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -168,15 +201,16 @@ export default function Posts() {
             }, 100);
         } else {
             // Regular scroll to next post
+            if (!containerRef.current) return;
             const postElements = containerRef.current.querySelectorAll('[data-post]');
             const nextIndex = Math.min(currentIndex + 1, postElements.length - 1);
-            
+
             if (nextIndex < postElements.length) {
                 const nextPost = postElements[nextIndex] as HTMLElement;
-                setTimeout(()=>{
+                setTimeout(() => {
 
-                nextPost.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                },100)
+                    nextPost.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100)
             }
         }
     };
@@ -186,7 +220,7 @@ export default function Posts() {
 
         const currentIndex = getCurrentPostIndex();
         const prevIndex = Math.max(currentIndex - 1, 0);
-        
+
         const postElements = containerRef.current.querySelectorAll('[data-post]');
         if (prevIndex >= 0 && prevIndex < postElements.length) {
             const prevPost = postElements[prevIndex] as HTMLElement;
@@ -252,7 +286,7 @@ export default function Posts() {
                                     <span className="text-white text-xs font-bold mt-1">
                                         {formatNumber(post.no_of_comments)}
                                     </span>
-                                    </div>
+                                </div>
 
                                 <div className="rounded-full overflow-hidden border-2 border-white">
                                     <Avatar className="h-10 w-10">
@@ -268,7 +302,7 @@ export default function Posts() {
                                     <span className="text-white font-bold text-sm">
                                         @{post.user.name.toLowerCase().replace(/\s+/g, '')}
                                     </span>
-                                    
+
                                 </div>
                                 <p className="text-white text-sm mb-2">{post.caption}</p>
                             </div>
@@ -278,7 +312,7 @@ export default function Posts() {
                     <div ref={loadTriggerRef} className="h-2 bg-transparent" />
                     {isLoading && (
                         <div className="snap-start h-full w-full flex items-center justify-center">
-                            <PostSkeleton/>
+                            <PostSkeleton />
                         </div>
                     )}
                 </div>
@@ -286,7 +320,7 @@ export default function Posts() {
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-10">
                     <button
                         onClick={scrollToPrev}
-                        disabled={posts.length === 0 || isLoading}
+                        disabled={posts.length === 0 || isLoading || getCurrentPostIndex() === 0}
                         className="p-2 bg-black/50 rounded-full text-white hover:bg-black/70 disabled:opacity-50"
                     >
                         <ChevronUp size={24} />

@@ -13,22 +13,14 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::with('user')
-            ->whereNull('group_id')
-            ->latest()
-            ->cursorPaginate(5)
-            ->withQueryString();
+        
 
-
-        $nextCursor = $posts->nextCursor();
-
-        return Inertia::render('Posts', [
-            'posts' => [
-                'data' => $posts->items(),
-                'next_cursor' => $nextCursor ? $nextCursor->encode() : null,
-            ],
-        ]);
-    }
+    //     return Inertia::render('Posts', [
+    //         'posts' => [
+    //             'groupId' => 1
+    //         ],
+    //     ]);
+     }
 
 
     /**
