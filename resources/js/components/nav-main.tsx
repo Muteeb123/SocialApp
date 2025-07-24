@@ -88,9 +88,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                             <div className="ml-6 mt-1 space-y-1">
                                 {groupLoading ? (
                                     <span className="text-xs text-gray-400">Loading...</span>
-                                ) : groupLinks.length === 0 ? (
-                                    <span className="text-xs text-gray-400">No groups found.</span>
-                                ) : (
+                                ) :  (
                                     groupLinks.map((group) => (
                                         <SidebarMenuItem key={group.title}>
                                             <SidebarMenuButton
