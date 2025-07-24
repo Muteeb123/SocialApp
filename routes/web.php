@@ -20,7 +20,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('friends', FriendController::class)->names('friends');
     Route::get('/add',[FriendController::class,'search'])->name('friends.search');
     Route::resource('posts',PostController::class)->names('posts');
-    Route::get('/how',[PostGetter::class,'fetchOne']);
+    Route::get('/how',[PostGetter::class,'fetch']);
+    Route::get('/comments',[PostGetter::class,'fetchComments']);
+    Route::get('/likes',[PostGetter::class,'fetchLikes']);
+    Route::post('/comment',[PostGetter::class,'storeComment']);
+     Route::delete('/comment/{id}',[PostGetter::class,'deleteComment']);
+
 });
 
 require __DIR__.'/settings.php';

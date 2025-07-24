@@ -10,14 +10,25 @@ import AppLogo from './app-logo';
 const mainNavItems: NavItem[] = [
     {
         title: 'Posts',
-        href: '/posts',
+        href: '/home',
         icon: LayoutGrid,
-    },{
-        title:'Friends',
+    },
+    {
+        title: 'Friends',
         href: '/friends',
-        icon: LayoutGrid
-    }
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Groups',
+        icon: Folder,
+        href:'/groups',
+        children: [
+            { title: 'My Groups', href: '/groups/mine' },
+            { title: 'Explore Groups', href: '/groups/explore' },
+        ],
+    },
 ];
+
 
 const footerNavItems: NavItem[] = [
     
@@ -30,7 +41,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/posts" prefetch>
+                            <Link href="/home" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Like;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class PostController extends Controller
@@ -36,7 +39,8 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
+
     }
 
     /**
@@ -53,6 +57,14 @@ class PostController extends Controller
     public function edit(Post $post)
     {
         //
+        $like = new Like();
+        $like->user_id = Auth::id();
+        $like->post_id = $post->id;
+        $like->save();
+
+        $post->no_of_likes = $post->no_of_likes + 1; 
+        $post->save();
+        Log::info('success');
     }
 
     /**
@@ -68,6 +80,10 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        //
+        $post->no_of_likes = $post->no_of_likes - 1; 
+        $post->save();
+
+        $like = Like::where('user_id',Auth::id())->where('post_id', $post->id);
+        $like->delete();
     }
 }

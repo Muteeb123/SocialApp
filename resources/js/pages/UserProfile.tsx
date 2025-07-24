@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AppLayout from '@/layouts/app-layout';
 import { toast } from 'react-hot-toast';
+import { useAuth } from './auth/useAuth';
 type Props = {
-    reqid :number;
+    reqid: number;
     id: number;
     name: string;
     sent: number;
@@ -12,7 +13,7 @@ type Props = {
     friends: number;
     existing: boolean;
     is_friend: boolean;
-    has_received:boolean;
+    has_received: boolean;
 };
 
 function getInitials(name: string): string {
@@ -23,18 +24,24 @@ function getInitials(name: string): string {
         .toUpperCase();
 }
 
-const UserProfile: React.FC<Props> = ({ reqid ,id, name, sent, received, friends, existing, is_friend, has_received }) => {
-
+const UserProfile: React.FC<Props> = ({ reqid, id, name, sent, received, friends, existing, is_friend, has_received }) => {
+    const user = useAuth();
     const page = usePage();
     const flash = page?.props?.flash as { success?: string; error?: string } | undefined;
     const errors = page.props.errors as Record<string, string>;
+    const [myProfile, setmyProfile] = useState<boolean>(false);
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
         if (flash?.error) toast.error(flash.error);
         if (errors) Object.values(errors).forEach(msg => toast.error(msg));
 
-     
+        if (id == user?.id) {
+            setmyProfile(true)
+        }
+
     }, [flash, errors]);
+
+
     const handleAddFriend = () => {
         router.post(
             route('friends.store'),
@@ -69,38 +76,46 @@ const UserProfile: React.FC<Props> = ({ reqid ,id, name, sent, received, friends
                         </div>
 
                         {/* Add Friend / Pending Button */}
-                       {is_friend ? (
-    <button
-        disabled
-        className="px-4 py-2 mt-2 rounded bg-green-600 text-white opacity-80"
-    >
-        Friend
-    </button>
-) : has_received ? (
-    <button
-         onClick={(e) => {
-                        e.stopPropagation();
-                      router.put(route('friends.update', reqid));
-                    }}
-        className="px-4 py-2 mt-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 transition"
-    >
-        Accept Request
-    </button>
-) : existing ? (
-    <button
-        disabled
-        className="px-4 py-2 mt-2 rounded bg-gray-600 text-white opacity-60"
-    >
-        Request Pending
-    </button>
-) : (
-    <button
-        onClick={handleAddFriend}
-        className="px-4 py-2 mt-2 rounded bg-blue-500 text-white hover:bg-blue-600 transition"
-    >
-        Add Friend
-    </button>
-)}
+                        {myProfile ? (
+                            <button
+                                disabled
+                                className="px-4 py-2 mt-2 rounded bg-indigo-600 text-white opacity-80"
+                            >
+                                Me
+                            </button>
+                        ) : is_friend ? (
+                            <button
+                                disabled
+                                className="px-4 py-2 mt-2 rounded bg-green-600 text-white opacity-80"
+                            >
+                                Friend
+                            </button>
+                        ) : has_received ? (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.put(route('friends.update', reqid));
+                                }}
+                                className="px-4 py-2 mt-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 transition"
+                            >
+                                Accept Request
+                            </button>
+                        ) : existing ? (
+                            <button
+                                disabled
+                                className="px-4 py-2 mt-2 rounded bg-gray-600 text-white opacity-60"
+                            >
+                                Request Pending
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleAddFriend}
+                                className="px-4 py-2 mt-2 rounded bg-blue-500 text-white hover:bg-blue-600 transition"
+                            >
+                                Add Friend
+                            </button>
+                        )}
+
 
 
                     </div>
