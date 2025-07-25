@@ -26,7 +26,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/likes',[PostGetter::class,'fetchLikes']);
     Route::post('/comment',[PostGetter::class,'storeComment']);
     Route::delete('/comment/{id}',[PostGetter::class,'deleteComment']);
-    Route::get('/groups',[GroupController::class,'getGroups']);
+    Route::get('/groups',[GroupController::class,'getAllGroups']);
+    Route::get('/joinedgroups',[GroupController::class,'getGroups']);
+    Route::post('/createGroup',[GroupController::class,'createGroup'])->name('groups.store');
+    Route::delete('/groups/{group}', [GroupController::class, 'destroy'])->name('groups.destroy');
+    Route::post('/groups/{group}/leave',[GroupController::class,'leaveGroup'])->name('groups.leave');
+    Route::post('/groups/{group}/join', [GroupController::class, 'joinGroup'])->name('groups.join');
+
 
 });
 

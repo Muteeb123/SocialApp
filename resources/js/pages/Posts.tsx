@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
@@ -67,12 +67,19 @@ export default function Posts() {
 
     const formatNumber = (num: number): string =>
         num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toString();
+    const page = usePage();
+    const groupIdParam = new URLSearchParams(window.location.search).get('groupId');
 
-const groupIdParam = new URLSearchParams(window.location.search).get('groupId');
-const groupId = groupIdParam ? parseInt(groupIdParam) : null;
+    const groupId = useMemo(() => {
+        const params = new URLSearchParams(page.url.split('?')[1]);
+        const groupIdParam = params.get('groupId');
+        return groupIdParam ? parseInt(groupIdParam) : null;
+    }, [page.url]);
+
 
     const user = useAuth();
     const fetchPost = async () => {
+
         if (isLoading || !hasMore) return;
         setIsLoading(true);
         try {
@@ -104,7 +111,12 @@ const groupId = groupIdParam ? parseInt(groupIdParam) : null;
         }
     };
 
-    useEffect(() => { fetchPost(); }, []);
+    useEffect(() => {
+        setPosts([]);
+        setSeenIds([]);
+        setHasMore(true);
+        fetchPost();
+    }, [groupId]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -196,17 +208,17 @@ const groupId = groupIdParam ? parseInt(groupIdParam) : null;
             isliked: !post.isliked
         } : post));
 
-        if (posts[currentPostIndex].isliked){
-        await    router.delete(route('posts.destroy', postId), {
-    preserveState: true,
-    preserveScroll: true,
-});
+        if (posts[currentPostIndex].isliked) {
+            await router.delete(route('posts.destroy', postId), {
+                preserveState: true,
+                preserveScroll: true,
+            });
         }
         else {
-          await   router.get(route('posts.edit', postId), {}, {
-    preserveState: true,
-    preserveScroll: true,
-});
+            await router.get(route('posts.edit', postId), {}, {
+                preserveState: true,
+                preserveScroll: true,
+            });
 
         }
         // try {
@@ -230,16 +242,17 @@ const groupId = groupIdParam ? parseInt(groupIdParam) : null;
     };
 
     const handleFriendPage = (e: React.MouseEvent) => {
-         e.stopPropagation();
+        e.stopPropagation();
 
-         router.get(
-           route('friends.show', posts[currentPostIndex].user_id),
-           { user_id: posts[currentPostIndex].user_id,
-             name : posts[currentPostIndex].user.name,
-             logid : user?.id,
+        router.get(
+            route('friends.show', posts[currentPostIndex].user_id),
+            {
+                user_id: posts[currentPostIndex].user_id,
+                name: posts[currentPostIndex].user.name,
+                logid: user?.id,
             }
-         );
-       };
+        );
+    };
 
 
     return (
@@ -274,8 +287,8 @@ const groupId = groupIdParam ? parseInt(groupIdParam) : null;
 
                             <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent">
                                 <div className="flex items-center gap-3 px-2 py-3 hover:cursor-pointer"
-                                
-                                    onClick={(e)=>{
+
+                                    onClick={(e) => {
                                         handleFriendPage(e)
                                     }}
                                 >
@@ -291,27 +304,27 @@ const groupId = groupIdParam ? parseInt(groupIdParam) : null;
                             <div className="absolute right-4 bottom-1/3 flex flex-col items-center gap-6">
                                 <div
                                     className="flex flex-col items-center"
-                                   
+
                                 >
                                     <button className="p-2 bg-black/30 rounded-full hover:cursor-pointer"
-                                         onClick={() => handleLike(post.id)}
+                                        onClick={() => handleLike(post.id)}
                                     >
                                         {post.isliked ? (
                                             <Heart size={24} className="text-red-500 fill-red-500" />
-                                        
-                                        
+
+
                                         ) : (
                                             <Heart size={24} className="" />
                                         )}
                                     </button>
                                     <span className="text-white text-xs font-bold mt-1 hover:cursor-pointer hover:underline"
-                                        onClick={()=>{
-                                          setActivePanel('likes')
+                                        onClick={() => {
+                                            setActivePanel('likes')
                                         }}
-                                        >
+                                    >
                                         {formatNumber(post.no_of_likes)}
                                     </span>
-                                    
+
                                 </div>
 
                                 <div
@@ -325,7 +338,7 @@ const groupId = groupIdParam ? parseInt(groupIdParam) : null;
                                         {formatNumber(post.no_of_comments)}
                                     </span>
                                 </div>
-{/* 
+                                {/* 
                                 <div className="rounded-full overflow-hidden border-2 border-white cursor-pointer">
                                     <Avatar className="h-10 w-10">
                                         <AvatarFallback className="bg-neutral-700 text-white">
@@ -367,31 +380,30 @@ const groupId = groupIdParam ? parseInt(groupIdParam) : null;
                     )}
                 </div>
 
-              {(activePanel === 'comments' || activePanel === 'likes') && (
-    <div
-        className={`right-0 top-0 h-full z-40 transition-all duration-500 ease-in-out transform ${
-            activePanel ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[30px] pointer-events-none'
-        }`}
-    >
-        <div className="w-[480px] h-full bg-zinc-900 shadow-xl rounded-l-xl">
-            {activePanel === 'comments' ? (
-                <CommentController
-                    post={posts[currentPostIndex]}
-                    onClick={() => setActivePanel(null)}
-                />
-            ) : (
-                <LikeController
-                    post={posts[currentPostIndex]}
-                    onClick={() => setActivePanel(null)}
-                />
-            )}
-        </div>
-    </div>
-)}
+                {(activePanel === 'comments' || activePanel === 'likes') && (
+                    <div
+                        className={`right-0 top-0 h-full z-40 transition-all duration-500 ease-in-out transform ${activePanel ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[30px] pointer-events-none'
+                            }`}
+                    >
+                        <div className="w-[480px] h-full bg-zinc-900 shadow-xl rounded-l-xl">
+                            {activePanel === 'comments' ? (
+                                <CommentController
+                                    post={posts[currentPostIndex]}
+                                    onClick={() => setActivePanel(null)}
+                                />
+                            ) : (
+                                <LikeController
+                                    post={posts[currentPostIndex]}
+                                    onClick={() => setActivePanel(null)}
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
 
-              
 
-                {posts.length!==0 && <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-10">
+
+                {posts.length !== 0 && <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-10">
                     <button
                         onClick={scrollToPrev}
                         disabled={posts.length === 0 || isLoading || getCurrentPostIndex() === 0}
@@ -407,7 +419,7 @@ const groupId = groupIdParam ? parseInt(groupIdParam) : null;
                         <ChevronDown size={24} />
                     </button>
                 </div>
-                    
+
                 }
             </div>
         </AppLayout>

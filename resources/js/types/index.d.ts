@@ -22,6 +22,7 @@ export interface NavItem {
     sep?:string;
     isActive?: boolean;
     children?: NavItem[];
+    id?:number;
 }
 
 export interface SharedData {
