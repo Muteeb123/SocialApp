@@ -31,4 +31,5 @@ RUN php artisan config:cache \
 EXPOSE 8080
 
 # Start FrankenPHP
-CMD ["frankenphp"]
+CMD ["caddy", "php-server", "--root", "/app/public"]
+
