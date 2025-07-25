@@ -42,7 +42,8 @@ class PostGetter extends Controller
                         ->take(2)
                         ->get(),
                     'seen_ids' => $seenIds,
-                    'error' => 'Not Authorized. Showing public posts.'
+                    'error' => 'Not Authorized. Showing public posts.',
+                    'groupID' => null
                 ], 200);
             }
             $query->where('group_id', $groupId);

@@ -190,7 +190,11 @@ export default function Posts() {
                     return Array.from(uniqueMap.values());
                 });
 
-                if (data.error) toast.error(data.error);
+                if (data.error){ toast.error(data.error)
+
+                    router.visit('/home')
+                };
+
                 setSeenIds(data.seen_ids);
             } else {
                 setHasMore(false);
