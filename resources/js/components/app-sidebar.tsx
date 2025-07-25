@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, GroupIcon, Image, LayoutGrid, PictureInPicture, PodcastIcon, User2, UserCircle2Icon, Users } from 'lucide-react';
+import { BookOpen, Folder, GroupIcon, Image, LayoutGrid, PictureInPicture, PlusSquareIcon, PodcastIcon, User2, UserCircle2Icon, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 import { UserGroupIcon , PhotoIcon} from '@heroicons/react/24/outline';
 const mainNavItems: NavItem[] = [
@@ -25,6 +25,11 @@ const mainNavItems: NavItem[] = [
         href:'/groups',
        
     },
+    {
+        title: 'Upload Post',
+        href: '/posts/create',
+        icon : PlusSquareIcon
+    }
 ];
 
 

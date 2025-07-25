@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use phpDocumentor\Reflection\PseudoTypes\LowercaseString;
 
 class GroupController extends Controller
 {
@@ -61,6 +62,10 @@ class GroupController extends Controller
         $creator = Auth::id();
         $uuid = Str::uuid();
         $exist = Group::where('name', $name)->exists();
+
+        if (Str::lower($name) ==='public' ){
+            return redirect()->back()->with('error', 'Name: Public is not Allowed');
+        }
         if ($exist) {
             return redirect()->back()->with('error', 'Group With Name: ' . $name  . ' Already Exists');
         }
@@ -97,33 +102,31 @@ class GroupController extends Controller
 
         $user = User::find(Auth::id());
 
-        // Check if user is a member
+        
         if (!$group->users->contains($user->id) && $group->creator_id !== $user->id) {
             return back()->with('error', 'You are not a member of this group.');
         }
 
-        // If the user is the creator
         if ($group->creator_id === $user->id) {
-            // Get other members excluding the current user
+           
             $otherMembers = $group->users->where('id', '!=', $user->id);
 
             if ($otherMembers->isEmpty()) {
-                // No one else in group, delete it
+
                 $group->delete();
                 return back()->with('success', 'Group deleted as no members were left.');
             } else {
-                // Assign new creator
+               
                 $newCreator = $otherMembers->first();
                 $group->creator_id = $newCreator->id;
                 $group->save();
 
-                // Detach the current user
                 $user->groups()->detach($group->id);
 
                 return back()->with('success', 'You left the group and ownership was transferred.');
             }
         } else {
-            // If not the creator, just leave
+           
             $user->groups()->detach($group->id);
             return back()->with('success', 'You left the group.');
         }

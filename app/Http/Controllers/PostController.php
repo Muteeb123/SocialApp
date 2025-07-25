@@ -16,14 +16,14 @@ class PostController extends Controller
      */
     public function index()
     {
-        
 
-    //     return Inertia::render('Posts', [
-    //         'posts' => [
-    //             'groupId' => 1
-    //         ],
-    //     ]);
-     }
+
+        //     return Inertia::render('Posts', [
+        //         'posts' => [
+        //             'groupId' => 1
+        //         ],
+        //     ]);
+    }
 
 
     /**
@@ -32,6 +32,7 @@ class PostController extends Controller
     public function create()
     {
         //
+        return Inertia::render('AddPost');
     }
 
     /**
@@ -39,8 +40,29 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        
+        Log::info('Hello1');
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,jpg,png|max:2048',
+            'description' => 'nullable|string|max:500',
+            'group_id' => 'nullable|string' 
+        ]);
+        Log::info('Hello2');
+        $groupId = $request->input('group_id') === 'public' ? null : (int) $request->input('group_id');
 
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('uploads', 'public'); 
+        } else {
+            return back()->withErrors(['image' => 'Image upload failed.']);
+        }
+
+        $post = Post::create([
+            'user_id'     => Auth::id(),
+            'caption' => $request->input('description'),
+            'group_id'    => $groupId,
+            'img_url'  => $path,
+        ]);
+
+        return redirect()->back()->with('success', 'Post created successfully!');
     }
 
     /**
@@ -62,7 +84,7 @@ class PostController extends Controller
         $like->post_id = $post->id;
         $like->save();
 
-        $post->no_of_likes = $post->no_of_likes + 1; 
+        $post->no_of_likes = $post->no_of_likes + 1;
         $post->save();
         Log::info('success');
     }
@@ -80,10 +102,10 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        $post->no_of_likes = $post->no_of_likes - 1; 
+        $post->no_of_likes = $post->no_of_likes - 1;
         $post->save();
 
-        $like = Like::where('user_id',Auth::id())->where('post_id', $post->id);
+        $like = Like::where('user_id', Auth::id())->where('post_id', $post->id);
         $like->delete();
     }
 }

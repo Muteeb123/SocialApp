@@ -1,5 +1,5 @@
 import { useRemember, usePage, Link } from '@inertiajs/react';
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 
@@ -11,7 +11,17 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { group } from 'console';
+
+// ✅ Shared function to fetch groups
+async function fetchGroups() {
+    const response = await axios.get('/joinedgroups');
+    return response.data.groups.map((group: any) => ({
+        title: group.name,
+        href: `/home?groupId=${group.id}`,
+        sep: group.creator.name.split(' ')[0],
+        id: group.id,
+    }));
+}
 
 const NavMain = memo(function NavMain({ items = [] }: { items: NavItem[] }) {
     const page = usePage();
@@ -30,18 +40,7 @@ const NavMain = memo(function NavMain({ items = [] }: { items: NavItem[] }) {
         if (title === 'Groups' && !groupFetched) {
             setGroupLoading(true);
             try {
-                const response = await axios.get('/joinedgroups');
-                const data = response.data.groups.map((group: any) => ({
-                    title: group.name,
-                    href: `/home?groupId=${group.id}`,
-                    sep: group.creator.name.split(' ')[0],
-                    id:group.id
-                }
-              
-            )
-               
-            );
-                
+                const data = await fetchGroups(); // ✅ use shared function
                 setGroupLinks(data);
                 setGroupFetched(true);
             } catch (error) {
@@ -71,7 +70,6 @@ const NavMain = memo(function NavMain({ items = [] }: { items: NavItem[] }) {
                                         preserveScroll
                                         preserveState
                                         className="flex items-center gap-2 w-full"
-                                       
                                     >
                                         {item.icon && <item.icon />}
                                         <span>{item.title}</span>
@@ -117,14 +115,14 @@ const NavMain = memo(function NavMain({ items = [] }: { items: NavItem[] }) {
                                             <li key={group.title}>
                                                 <SidebarMenuButton
                                                     asChild
-                                                    isActive={page.url ===(group.href!)}
+                                                    isActive={page.url === group.href!}
                                                 >
                                                     <Link
                                                         href={group.href!}
                                                         prefetch
                                                         preserveScroll
                                                         preserveState
-                                                         onClick={()=> console.log(group.href!)}
+                                                        onClick={() => console.log(group.href!)}
                                                     >
                                                         <div className="flex justify-between items-center w-full">
                                                             <span className="text-sm font-medium text-white truncate">
@@ -149,4 +147,4 @@ const NavMain = memo(function NavMain({ items = [] }: { items: NavItem[] }) {
     );
 });
 
-export { NavMain };
+export { NavMain , fetchGroups };

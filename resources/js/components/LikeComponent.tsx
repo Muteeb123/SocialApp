@@ -16,7 +16,7 @@ type like = {
 type Post = {
     id: number;
     user_id: number;
-    caption: string;
+    caption?: string;
     no_of_likes: number;
     no_of_comments: number;
     img_url: string;

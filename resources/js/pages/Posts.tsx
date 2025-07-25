@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useInitials } from '@/hooks/use-initials';
 import { usePage } from '@inertiajs/react';
+import { toast } from 'react-hot-toast';
 import {
     ThumbsUp,
     MessageCircle,
@@ -32,7 +33,7 @@ type Comment = {
 type Post = {
     id: number;
     user_id: number;
-    caption: string;
+    caption?: string;
     no_of_likes: number;
     no_of_comments: number;
     img_url: string;
@@ -52,7 +53,9 @@ export default function Posts() {
     const [currentPostIndex, setCurrentPostIndex] = useState<number>(-1);
     const [expandedCaptions, setExpandedCaptions] = useState<Record<number, boolean>>({});
     const [activePanel, setActivePanel] = useState<'comments' | 'likes' | null>(null);
-
+    const page = usePage();
+    const flash = page?.props?.flash as { success?: string; error?: string } | undefined;
+    const errors = page.props.errors as Record<string, string>;
     useEffect(() => {
         const handleScroll = () => {
             if (!containerRef.current) return;
@@ -64,10 +67,15 @@ export default function Posts() {
         if (container) container.addEventListener('scroll', handleScroll);
         return () => container?.removeEventListener('scroll', handleScroll);
     }, [posts]);
+    useEffect(() => {
+        if (flash?.success) toast.success(flash.success);
+        if (flash?.error) toast.error(flash.error);
+        if (errors) Object.values(errors).forEach(msg => toast.error(msg));
+    }, [flash, errors]);
 
     const formatNumber = (num: number): string =>
         num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toString();
-    const page = usePage();
+
     const groupIdParam = new URLSearchParams(window.location.search).get('groupId');
 
     const groupId = useMemo(() => {
@@ -99,6 +107,10 @@ export default function Posts() {
                     all.forEach((p) => uniqueMap.set(p.id, p));
                     return Array.from(uniqueMap.values());
                 });
+
+                if (data.error){
+                     toast.error(data.error);
+                }
                 setSeenIds(data.seen_ids);
             } else {
                 setHasMore(false);
@@ -280,7 +292,7 @@ export default function Posts() {
                                 <img
                                     loading="lazy"
                                     src={`/storage/${post.img_url}`}
-                                    alt={post.caption}
+                                    alt={post.caption!}
                                     className="w-full h-full object-cover rounded-[20px] px-2 py-3"
                                 />
                             </div>
@@ -356,9 +368,9 @@ export default function Posts() {
                                 </div>
                                 <div className="relative">
                                     <p className={`text-white text-sm mb-2 ${expandedCaptions[post.id] ? '' : 'line-clamp-2'}`}>
-                                        {post.caption}
+                                        {post.caption!}
                                     </p>
-                                    {post.caption.length > 100 && (
+                                    {(post.caption || '').length > 100 && (
                                         <button
                                             onClick={() => toggleCaption(post.id)}
                                             className="text-white text-xs font-semibold mt-1"

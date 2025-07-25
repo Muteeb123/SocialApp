@@ -32,7 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/groups/{group}', [GroupController::class, 'destroy'])->name('groups.destroy');
     Route::post('/groups/{group}/leave',[GroupController::class,'leaveGroup'])->name('groups.leave');
     Route::post('/groups/{group}/join', [GroupController::class, 'joinGroup'])->name('groups.join');
-
+    
 
 });
 
