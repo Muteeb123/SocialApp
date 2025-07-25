@@ -26,7 +26,8 @@ class PostGetter extends Controller
         $groupId = $request->query('group_id');
 
         $query = Post::with(['user', 'likes'])
-            ->whereNotIn('id', $seenIds);
+            ->whereNotIn('id', $seenIds)
+            ->whereNot('user_id',Auth::id());
 
         if ($groupId !== null) {
             $group = Group::find($groupId);
