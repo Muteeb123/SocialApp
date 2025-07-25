@@ -1,8 +1,10 @@
-# Dockerfile
 FROM dunglas/frankenphp
 
 # Set working directory
 WORKDIR /app
+
+# Install Composer manually
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Copy Laravel files
 COPY . .
@@ -19,11 +21,8 @@ RUN php artisan config:cache \
  && php artisan view:cache \
  && php artisan event:cache
 
-# Run migrations automatically (optional)
-# RUN php artisan migrate --force
-
-# Expose the port (Railway expects this)
+# Expose the port
 EXPOSE 8080
 
-# Command to start FrankenPHP
+# Start FrankenPHP
 CMD ["frankenphp", "--port=${PORT}", "--document-root=/app/public"]
