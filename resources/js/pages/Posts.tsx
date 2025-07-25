@@ -89,7 +89,7 @@ function VideoPlayer({ src }: { src: string }) {
                 autoPlay
                 muted={muted}
                 onClick={handleClick}
-                className="w-full h-full object-cover cursor-pointer rounded-[20px]"
+                className="w-full h-full object-contain cursor-pointer rounded-[20px]"
             >
                 Your browser does not support the video tag.
             </video>
@@ -369,7 +369,7 @@ export default function Posts() {
                                         loading="lazy"
                                         src={`/storage/${post.img_url}`}
                                         alt={post.caption!}
-                                        className="w-full h-full object-cover rounded-[20px] px-2 py-3"
+                                        className="w-full h-full object-contain  rounded-[20px] px-2 py-3"
                                     />
                                 )}
                             </div>

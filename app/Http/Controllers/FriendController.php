@@ -70,7 +70,7 @@ class FriendController extends Controller
         $senderId = Auth::id();
         $receiverId = $request->user_id;
         $existing = $this->checkExistingrequest($senderId, $receiverId);
-        
+
         if ($existing) {
             return back()->with('error', 'Friend request already exists');
         }
@@ -107,16 +107,16 @@ class FriendController extends Controller
             ->where('is_accepted', true)
             ->count();
         $existing = $this->checkExistingrequest($logid, $userid);
-        $is_friend =false;
+        $is_friend = false;
         $has_received = false;
-        if ($existing){
+        if ($existing) {
             $is_friend = $existing->is_accepted;
-          
+
             $has_received = $existing->receiver_id == $logid;
         }
-          Log::info($is_friend);
+        Log::info($is_friend);
         return Inertia::render('UserProfile', [
-            'reqid'=>  $existing? $existing->id : 1,
+            'reqid' =>  $existing ? $existing->id : 1,
             'id' => $userid,
             'name' => $username,
             'sent' => $sentRequests,
@@ -124,7 +124,7 @@ class FriendController extends Controller
             'friends' => $friends,
             'existing' => $existing ? true : false,
             'is_friend' => $is_friend,
-            'has_received'=> $has_received
+            'has_received' => $has_received
         ]);
     }
 
@@ -164,7 +164,7 @@ class FriendController extends Controller
                 ->route('friends.index')
                 ->with('error', 'Action Not Allowed');
         }
-        if (!$friend){
+        if (!$friend) {
             return redirect()
                 ->route('friends.index')
                 ->with('error', 'Request Not Found');
@@ -203,9 +203,10 @@ class FriendController extends Controller
 
     public function search(Request $request)
     {
+        $users = $this->getUsers($request);
 
         return Inertia::render('friends', [
-            'results' => $this->getUsers($request),
+            'results' => $users,
             'friends' => $this->friendRequests()
         ]);
     }
@@ -213,11 +214,32 @@ class FriendController extends Controller
     public function getUsers(Request $request)
     {
         $query = $request->query('query');
-        return User::where('id', '!=', Auth::id())
+        $user = User::where('name', 'like', '%' . $query . '%')->where('id', '!=', Auth::id())->exists();
+
+        Log::info('Query: ' . $query);
+        Log::info('Exists: ' . ($user ? 'Yes' : 'No'));
+        $auth = Auth::user();
+        $users = User::where('id', '!=', $auth->id)
             ->where('name', 'like', '%' . $query . '%')
-            ->whereDoesntHave('sentFriendRequests')
-            ->whereDoesntHave('receivedFriendRequests')
+            ->whereDoesntHave('sentFriendRequests', function ($q) use ($auth) {
+                $q->where('receiver_id', $auth->id);
+            })
+            ->whereDoesntHave('receivedFriendRequests', function ($q) use ($auth) {
+                $q->where('sender_id', $auth->id);
+            })
             ->get();
+
+        $eixsts = $users->contains(function ($user) use ($query) {
+            return stripos($user->name, $query) !== false;
+        });
+
+        Log::info('Exists: ' . ($eixsts ? 'Yes' : 'No'));
+
+        if ($eixsts) {
+            Log::info($users);
+        }
+
+        return $users;
     }
     public function friendRequests()
     {
