@@ -31,4 +31,4 @@ RUN php artisan config:cache \
 EXPOSE 8080
 
 # Start FrankenPHP
-CMD ["frankenphp", "--port=${PORT}", "--document-root=/app/public"]
+CMD ["frankenphp",  "--document-root=/app/public"]
