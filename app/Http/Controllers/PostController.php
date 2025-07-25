@@ -38,32 +38,53 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
     public function store(Request $request)
     {
-        Log::info('Hello1');
+      try {
+    Log::info('Post submission started');
+
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,jpg,png|max:2048',
+            'media' => 'required|file|mimes:jpeg,jpg,png,mp4,mov,avi,webm|max:102400000000', 
             'description' => 'nullable|string|max:500',
-            'group_id' => 'nullable|string' 
+            'group_id' => 'nullable|string',
         ]);
-        Log::info('Hello2');
+
+        Log::info('Validation passed');
+
         $groupId = $request->input('group_id') === 'public' ? null : (int) $request->input('group_id');
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('uploads', 'public'); 
-        } else {
-            return back()->withErrors(['image' => 'Image upload failed.']);
+        if (!$request->hasFile('media')) {
+            return back()->withErrors(['media' => 'Media upload failed.']);
         }
 
+        $file = $request->file('media');
+        $path = $file->store('uploads', 'public');
+
+        $mimeType = $file->getMimeType();
+        Log::info('Type: ' . $mimeType);
+
+        $isVideo = str_starts_with($mimeType, 'video/');
+        $mediaType = $isVideo ? 'video' : 'image';
+         Log::info('Type: ' . $mediaType);
         $post = Post::create([
             'user_id'     => Auth::id(),
-            'caption' => $request->input('description'),
+            'caption'     => $request->input('description'),
             'group_id'    => $groupId,
-            'img_url'  => $path,
+            'img_url'     => $path,
+            'media_type'  => $mediaType, 
         ]);
+
+          Log::info('Type: ' . $post);
+    
+} catch (\Exception $e) {
+    Log::error('Post creation failed: ' . $e->getMessage());
+    return back()->withErrors(['error' => 'Failed to create post.']);
+}
 
         return redirect()->back()->with('success', 'Post created successfully!');
     }
+
 
     /**
      * Display the specified resource.

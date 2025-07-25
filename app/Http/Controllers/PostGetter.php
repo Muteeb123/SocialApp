@@ -21,6 +21,7 @@ class PostGetter extends Controller
 
     public function fetch(Request $request)
     {
+
         $seenIds = $request->input('seen_ids', []);
         $groupId = $request->query('group_id');
 
@@ -30,19 +31,19 @@ class PostGetter extends Controller
         if ($groupId !== null) {
             $group = Group::find($groupId);
 
-           if (!$group || !$group->users()->where('user_id', Auth::id())->exists()) {
-    return response()->json([
-        'message' => 'Not Authorized. Showing public posts.',
-        'posts' => Post::with(['user', 'likes'])
-                    ->whereNull('group_id')
-                    ->whereNotIn('id', $seenIds)
-                    ->inRandomOrder()
-                    ->take(2)
-                    ->get(),
-        'seen_ids' => $seenIds,
-        'error'=> 'Not Authorized. Showing public posts.'
-    ], 200); 
-}
+            if (!$group || !$group->users()->where('user_id', Auth::id())->exists()) {
+                return response()->json([
+                    'message' => 'Not Authorized. Showing public posts.',
+                    'posts' => Post::with(['user', 'likes'])
+                        ->whereNull('group_id')
+                        ->whereNotIn('id', $seenIds)
+                        ->inRandomOrder()
+                        ->take(2)
+                        ->get(),
+                    'seen_ids' => $seenIds,
+                    'error' => 'Not Authorized. Showing public posts.'
+                ], 200);
+            }
             $query->where('group_id', $groupId);
         } else {
             $query->whereNull('group_id');
@@ -55,7 +56,7 @@ class PostGetter extends Controller
         });
 
         $newSeenIds = array_merge($seenIds, $posts->pluck('id')->toArray());
-
+          Log::info('Posts: ' . $posts);
         return response()->json([
             'posts' => $posts,
             'seen_ids' => $newSeenIds,

@@ -12,6 +12,11 @@ import {
     ChevronUp,
     X,
     Heart,
+    Volume,
+    VolumeX,
+    Volume1Icon,
+    Volume1,
+    Volume2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import PostSkeleton from '@/components/PostSkeleton';
@@ -19,9 +24,7 @@ import CommentController from '@/components/CommentComponent';
 import { useAuth } from './auth/useAuth';
 import LikeController from '@/components/LikeComponent';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Hello', href: '/home' },
-];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Hello', href: '/home' }];
 
 type User = { id: number; name: string };
 type Comment = {
@@ -39,7 +42,88 @@ type Post = {
     img_url: string;
     user: User;
     isliked?: boolean;
+    media_type?: string;
 };
+
+function VideoPlayer({ src }: { src: string }) {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [progress, setProgress] = useState(0);
+    const [muted, setMuted] = useState(true);
+
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        const updateProgress = () => {
+            if (!video.duration) return;
+            setProgress((video.currentTime / video.duration) * 100);
+        };
+
+        video.addEventListener('timeupdate', updateProgress);
+        return () => {
+            video.removeEventListener('timeupdate', updateProgress);
+        };
+    }, []);
+
+    const handleClick = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.paused ? video.play() : video.pause();
+    };
+
+    const toggleMute = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setMuted((prev) => (
+            !prev));
+
+        const video = videoRef.current;
+        if (video) video.muted = !video.muted;
+        console.log(video?.muted)
+    };
+    return (
+        <div className="relative w-full h-full rounded-[20px] overflow-hidden px-2 py-3 bg-black group">
+            <video
+                ref={videoRef}
+                src={src}
+                loop
+                autoPlay
+                muted={muted}
+                onClick={handleClick}
+                className="w-full h-full object-cover cursor-pointer rounded-[20px]"
+            >
+                Your browser does not support the video tag.
+            </video>
+
+            {/* Progress Bar */}
+            <div className="absolute bottom-3 left-3 right-12 h-1.5 bg-white/30 rounded-full z-10">
+                <div
+                    className="h-full bg-white rounded-full transition-all duration-100"
+                    style={{ width: `${progress}%` }}
+                />
+            </div>
+
+            {/* Volume Toggle Button */}
+
+            <div className="absolute top-60 right-4 flex justify-center items-center  rounded-full">
+                <button
+                    onClick={toggleMute}
+                    className="rounded-full bg-black/30 p-2"
+                >
+                    {muted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+                </button>
+            </div>
+
+            <div className='absolute top-60 right-60 justify ' > 
+
+
+
+            </div>
+
+
+        </div>
+    );
+
+}
 
 export default function Posts() {
     const getInitials = useInitials();
@@ -56,27 +140,10 @@ export default function Posts() {
     const page = usePage();
     const flash = page?.props?.flash as { success?: string; error?: string } | undefined;
     const errors = page.props.errors as Record<string, string>;
-    useEffect(() => {
-        const handleScroll = () => {
-            if (!containerRef.current) return;
-            const index = getCurrentPostIndex();
-            setCurrentPostIndex((prev) => prev !== index ? index : prev);
-        };
-
-        const container = containerRef.current;
-        if (container) container.addEventListener('scroll', handleScroll);
-        return () => container?.removeEventListener('scroll', handleScroll);
-    }, [posts]);
-    useEffect(() => {
-        if (flash?.success) toast.success(flash.success);
-        if (flash?.error) toast.error(flash.error);
-        if (errors) Object.values(errors).forEach(msg => toast.error(msg));
-    }, [flash, errors]);
+    const user = useAuth();
 
     const formatNumber = (num: number): string =>
         num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toString();
-
-    const groupIdParam = new URLSearchParams(window.location.search).get('groupId');
 
     const groupId = useMemo(() => {
         const params = new URLSearchParams(page.url.split('?')[1]);
@@ -84,10 +151,25 @@ export default function Posts() {
         return groupIdParam ? parseInt(groupIdParam) : null;
     }, [page.url]);
 
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!containerRef.current) return;
+            const index = getCurrentPostIndex();
+            setCurrentPostIndex((prev) => (prev !== index ? index : prev));
+        };
 
-    const user = useAuth();
+        const container = containerRef.current;
+        if (container) container.addEventListener('scroll', handleScroll);
+        return () => container?.removeEventListener('scroll', handleScroll);
+    }, [posts]);
+
+    useEffect(() => {
+        if (flash?.success) toast.success(flash.success);
+        if (flash?.error) toast.error(flash.error);
+        if (errors) Object.values(errors).forEach((msg) => toast.error(msg));
+    }, [flash, errors]);
+
     const fetchPost = async () => {
-
         if (isLoading || !hasMore) return;
         setIsLoading(true);
         try {
@@ -108,9 +190,7 @@ export default function Posts() {
                     return Array.from(uniqueMap.values());
                 });
 
-                if (data.error){
-                     toast.error(data.error);
-                }
+                if (data.error) toast.error(data.error);
                 setSeenIds(data.seen_ids);
             } else {
                 setHasMore(false);
@@ -133,10 +213,14 @@ export default function Posts() {
     useEffect(() => {
         const observer = new IntersectionObserver(
             ([entry]) => {
-                if (entry.isIntersecting && hasMore && !isLoading &&
+                if (
+                    entry.isIntersecting &&
+                    hasMore &&
+                    !isLoading &&
                     containerRef.current &&
                     containerRef.current.scrollTop + containerRef.current.clientHeight >=
-                    containerRef.current.scrollHeight - 10) {
+                    containerRef.current.scrollHeight - 10
+                ) {
                     fetchPost();
                 }
             },
@@ -150,7 +234,9 @@ export default function Posts() {
     useEffect(() => {
         const originalStyle = window.getComputedStyle(document.body).overflow;
         document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = originalStyle; };
+        return () => {
+            document.body.style.overflow = originalStyle;
+        };
     }, []);
 
     const getCurrentPostIndex = () => {
@@ -171,7 +257,6 @@ export default function Posts() {
     };
 
     const scrollToNext = async () => {
-
         if (!containerRef.current || isLoading || posts.length === 0) return;
         const currentIndex = getCurrentPostIndex();
         const isAtLastPost = currentIndex === posts.length - 1;
@@ -190,14 +275,13 @@ export default function Posts() {
                 }
             }, 100);
         } else {
-            if (!containerRef.current) return;
             const postElements = containerRef.current.querySelectorAll('[data-post]');
             const nextIndex = Math.min(currentIndex + 1, postElements.length - 1);
             if (nextIndex < postElements.length) {
                 const nextPost = postElements[nextIndex] as HTMLElement;
                 setTimeout(() => {
                     nextPost.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100)
+                }, 100);
             }
         }
     };
@@ -225,25 +309,12 @@ export default function Posts() {
                 preserveState: true,
                 preserveScroll: true,
             });
-        }
-        else {
+        } else {
             await router.get(route('posts.edit', postId), {}, {
                 preserveState: true,
                 preserveScroll: true,
             });
-
         }
-        // try {
-        //     await fetch(`/}/like`, {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'X-CSRF-TOKEN': String(usePage().props.csrf_token)
-        //         }
-        //     });
-        // } catch (error) {
-        //     console.error('Error liking post:', error);
-        // }
     };
 
     const toggleCaption = (postId: number) => {
@@ -255,7 +326,6 @@ export default function Posts() {
 
     const handleFriendPage = (e: React.MouseEvent) => {
         e.stopPropagation();
-
         router.get(
             route('friends.show', posts[currentPostIndex].user_id),
             {
@@ -265,7 +335,6 @@ export default function Posts() {
             }
         );
     };
-
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -289,20 +358,22 @@ export default function Posts() {
                             className="snap-start h-full w-full relative px-2 py-2 rounded-[20px]"
                         >
                             <div className="absolute inset-0 rounded">
-                                <img
-                                    loading="lazy"
-                                    src={`/storage/${post.img_url}`}
-                                    alt={post.caption!}
-                                    className="w-full h-full object-cover rounded-[20px] px-2 py-3"
-                                />
+                                {post.media_type === 'video' ? (
+                                    <VideoPlayer src={`/storage/${post.img_url}`} />
+                                ) : (
+                                    <img
+                                        loading="lazy"
+                                        src={`/storage/${post.img_url}`}
+                                        alt={post.caption!}
+                                        className="w-full h-full object-cover rounded-[20px] px-2 py-3"
+                                    />
+                                )}
                             </div>
 
                             <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent">
-                                <div className="flex items-center gap-3 px-2 py-3 hover:cursor-pointer"
-
-                                    onClick={(e) => {
-                                        handleFriendPage(e)
-                                    }}
+                                <div
+                                    className="flex items-center gap-3 px-2 py-3 hover:cursor-pointer"
+                                    onClick={handleFriendPage}
                                 >
                                     <Avatar className="h-10 w-10 border border-white">
                                         <AvatarFallback className="bg-neutral-700 text-white">
@@ -314,29 +385,19 @@ export default function Posts() {
                             </div>
 
                             <div className="absolute right-4 bottom-1/3 flex flex-col items-center gap-6">
-                                <div
-                                    className="flex flex-col items-center"
-
-                                >
+                                <div className="flex flex-col items-center">
                                     <button className="p-2 bg-black/30 rounded-full hover:cursor-pointer"
-                                        onClick={() => handleLike(post.id)}
-                                    >
+                                        onClick={() => handleLike(post.id)}>
                                         {post.isliked ? (
                                             <Heart size={24} className="text-red-500 fill-red-500" />
-
-
                                         ) : (
-                                            <Heart size={24} className="" />
+                                            <Heart size={24} />
                                         )}
                                     </button>
                                     <span className="text-white text-xs font-bold mt-1 hover:cursor-pointer hover:underline"
-                                        onClick={() => {
-                                            setActivePanel('likes')
-                                        }}
-                                    >
+                                        onClick={() => setActivePanel('likes')}>
                                         {formatNumber(post.no_of_likes)}
                                     </span>
-
                                 </div>
 
                                 <div
@@ -350,14 +411,6 @@ export default function Posts() {
                                         {formatNumber(post.no_of_comments)}
                                     </span>
                                 </div>
-                                {/* 
-                                <div className="rounded-full overflow-hidden border-2 border-white cursor-pointer">
-                                    <Avatar className="h-10 w-10">
-                                        <AvatarFallback className="bg-neutral-700 text-white">
-                                            {getInitials(post.user.name)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                </div> */}
                             </div>
 
                             <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
@@ -383,7 +436,6 @@ export default function Posts() {
                         </div>
                     ))}
 
-
                     <div ref={loadTriggerRef} className="h-2 bg-transparent" />
                     {isLoading && (
                         <div className="snap-start h-full w-full flex items-center justify-center">
@@ -394,8 +446,7 @@ export default function Posts() {
 
                 {(activePanel === 'comments' || activePanel === 'likes') && (
                     <div
-                        className={`right-0 top-0 h-full z-40 transition-all duration-500 ease-in-out transform ${activePanel ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[30px] pointer-events-none'
-                            }`}
+                        className={`right-0 top-0 h-full z-40 transition-all duration-500 ease-in-out transform ${activePanel ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[30px] pointer-events-none'}`}
                     >
                         <div className="w-[480px] h-full bg-zinc-900 shadow-xl rounded-l-xl">
                             {activePanel === 'comments' ? (
@@ -413,26 +464,24 @@ export default function Posts() {
                     </div>
                 )}
 
-
-
-                {posts.length !== 0 && <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-10">
-                    <button
-                        onClick={scrollToPrev}
-                        disabled={posts.length === 0 || isLoading || getCurrentPostIndex() === 0}
-                        className="p-2 bg-black/50 rounded-full text-white hover:bg-black/70 disabled:opacity-50"
-                    >
-                        <ChevronUp size={24} />
-                    </button>
-                    <button
-                        onClick={scrollToNext}
-                        disabled={isLoading}
-                        className="p-2 bg-black/50 rounded-full text-white hover:bg-black/70 disabled:opacity-50"
-                    >
-                        <ChevronDown size={24} />
-                    </button>
-                </div>
-
-                }
+                {posts.length !== 0 && (
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-10">
+                        <button
+                            onClick={scrollToPrev}
+                            disabled={posts.length === 0 || isLoading || getCurrentPostIndex() === 0}
+                            className="p-2 bg-black/50 rounded-full text-white hover:bg-black/70 disabled:opacity-50"
+                        >
+                            <ChevronUp size={24} />
+                        </button>
+                        <button
+                            onClick={scrollToNext}
+                            disabled={isLoading}
+                            className="p-2 bg-black/50 rounded-full text-white hover:bg-black/70 disabled:opacity-50"
+                        >
+                            <ChevronDown size={24} />
+                        </button>
+                    </div>
+                )}
             </div>
         </AppLayout>
     );

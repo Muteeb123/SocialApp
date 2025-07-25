@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { X } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { useAuth } from '@/pages/auth/useAuth';
-
+import { useInitials } from '@/hooks/use-initials';
 
 type User = { id: number; name: string };
 type like = {
@@ -22,6 +22,7 @@ type Post = {
     img_url: string;
     user: User;
     isLiked?: boolean;
+    media_type?: string;
 };
 
 type likeControllerProps = {
@@ -53,17 +54,20 @@ const likeController = ({ post, onClick }: likeControllerProps) => {
         fetchlikes();
         console.log(likes);
     }, [post.id]);
-     const handleFriendPage = (e: React.MouseEvent, id:number,name: string ) => {
-             e.stopPropagation();
-            console.log(id);
-             router.get(
-               route('friends.show', id),
-               { user_id: id,
-                 name,
-                 logid : user?.id,
-                }
-             );
-           };
+    const handleFriendPage = (e: React.MouseEvent, id: number, name: string) => {
+        e.stopPropagation();
+        console.log(id);
+        router.get(
+            route('friends.show', id),
+            {
+                user_id: id,
+                name,
+                logid: user?.id,
+            }
+        );
+    };
+
+    const getInitials = useInitials()
     return (
         <div className="flex flex-col w-full h-full bg-black text-white sm:w-[480px]">
             {/* Header */}
@@ -97,20 +101,16 @@ const likeController = ({ post, onClick }: likeControllerProps) => {
 
                                     onClick={(e) => {
                                         handleFriendPage
-                                            (e,like.user.id,like.user.name)
+                                            (e, like.user.id, like.user.name)
                                     }}>
-                                    {like.user.name
-                                        .split(' ')
-                                        .map((w) => w[0])
-                                        .join('')
-                                        .toUpperCase()}
+                                    {getInitials(like.user.name)}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="flex-1">
                                 <div className="flex justify-between items-center">
                                     <span onClick={(e) => {
                                         handleFriendPage
-                                            (e,like.user.id,like.user.name)
+                                            (e, like.user.id, like.user.name)
                                     }}
                                         className="text-sm font-semibold cursor-pointer hover:underline">{like.user.name}</span>
                                     <span className="text-xs text-gray-400">

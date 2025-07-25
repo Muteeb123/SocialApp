@@ -6,7 +6,7 @@ import { X, Send, Delete, Trash2 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { useAuth } from '@/pages/auth/useAuth';
 import { router } from '@inertiajs/react';
-
+import { useInitials } from '@/hooks/use-initials';
 type User = { id: number; name: string };
 type Comment = {
     id: number;
@@ -23,6 +23,7 @@ type Post = {
     img_url: string;
     user: User;
     isLiked?: boolean;
+    media_type?:string;
 };
 
 type CommentControllerProps = {
@@ -96,7 +97,7 @@ const CommentController = ({ post, onClick }: CommentControllerProps) => {
         }
     };
 
-
+    const getInitials = useInitials();
 
 
 
@@ -136,11 +137,7 @@ const CommentController = ({ post, onClick }: CommentControllerProps) => {
                                     onClick={(e) => handleFriendPage(e, comment.user.id, comment.user.name)}
                                     className="bg-neutral-700 text-white hover:cursor-pointer"
                                 >
-                                    {comment.user.name
-                                        .split(' ')
-                                        .map((w) => w[0])
-                                        .join('')
-                                        .toUpperCase()}
+                                    {getInitials(comment.user.name)}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="flex-1">
