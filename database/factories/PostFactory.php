@@ -37,7 +37,7 @@ class PostFactory extends Factory
             'caption' => $this->faker->sentence(),
             'no_of_likes' => 0,
             'no_of_comments' => 0,
-            // This path should be accessible via URL as: /storage/uploads/filename.jpg
+            'group_id' => 11,
             'img_url' => 'uploads/' . $randomName,
         ];
     }

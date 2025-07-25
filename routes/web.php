@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FriendController;
+use App\Http\Controllers\GroupController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostGetter;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/comments',[PostGetter::class,'fetchComments']);
     Route::get('/likes',[PostGetter::class,'fetchLikes']);
     Route::post('/comment',[PostGetter::class,'storeComment']);
-     Route::delete('/comment/{id}',[PostGetter::class,'deleteComment']);
+    Route::delete('/comment/{id}',[PostGetter::class,'deleteComment']);
+    Route::get('/groups',[GroupController::class,'getGroups']);
 
 });
 

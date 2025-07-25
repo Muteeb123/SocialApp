@@ -68,7 +68,9 @@ export default function Posts() {
     const formatNumber = (num: number): string =>
         num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toString();
 
-    const groupId = usePage().props.groupId || null;
+const groupIdParam = new URLSearchParams(window.location.search).get('groupId');
+const groupId = groupIdParam ? parseInt(groupIdParam) : null;
+
     const user = useAuth();
     const fetchPost = async () => {
         if (isLoading || !hasMore) return;
@@ -299,7 +301,7 @@ export default function Posts() {
                                         
                                         
                                         ) : (
-                                            <ThumbsUp size={24} className="text-white" />
+                                            <Heart size={24} className="" />
                                         )}
                                     </button>
                                     <span className="text-white text-xs font-bold mt-1 hover:cursor-pointer hover:underline"
@@ -389,7 +391,7 @@ export default function Posts() {
 
               
 
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-10">
+                {posts.length!==0 && <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-10">
                     <button
                         onClick={scrollToPrev}
                         disabled={posts.length === 0 || isLoading || getCurrentPostIndex() === 0}
@@ -405,6 +407,8 @@ export default function Posts() {
                         <ChevronDown size={24} />
                     </button>
                 </div>
+                    
+                }
             </div>
         </AppLayout>
     );

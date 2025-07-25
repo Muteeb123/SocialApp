@@ -17,6 +17,7 @@ class Post extends Model
         'no_of_likes',
         'no_of_comments',
         'img_url',
+        'group_id'
 
     ];
 

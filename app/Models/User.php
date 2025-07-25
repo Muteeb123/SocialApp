@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -48,27 +49,39 @@ class User extends Authenticatable
     }
 
     public function posts(): HasMany
-{
-    return $this->hasMany(Post::class);
-}
+    {
+        return $this->hasMany(Post::class);
+    }
 
-public function comments(): HasMany
-{
-    return $this->hasMany(Comment::class);
-}
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
 
-public function likes(): HasMany
-{
-    return $this->hasMany(Like::class);
-}
+    public function likes(): HasMany
+    {
+        return $this->hasMany(Like::class);
+    }
 
-public function sentFriendRequests(): HasMany
-{
-    return $this->hasMany(Friend::class, 'sender_id');
-}
+    public function sentFriendRequests(): HasMany
+    {
+        return $this->hasMany(Friend::class, 'sender_id');
+    }
 
-public function receivedFriendRequests(): HasMany
-{
-    return $this->hasMany(Friend::class, 'receiver_id');
-}
+    public function receivedFriendRequests(): HasMany
+    {
+        return $this->hasMany(Friend::class, 'receiver_id');
+    }
+
+
+
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class)->withTimestamps();
+    }
+
+    public function createdGroups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'creator_id');
+    }
 }

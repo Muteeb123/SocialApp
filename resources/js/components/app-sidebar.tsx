@@ -4,28 +4,26 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { BookOpen, Folder, GroupIcon, Image, LayoutGrid, PictureInPicture, PodcastIcon, User2, UserCircle2Icon, Users } from 'lucide-react';
 import AppLogo from './app-logo';
-
+import { UserGroupIcon , PhotoIcon} from '@heroicons/react/24/outline';
 const mainNavItems: NavItem[] = [
     {
         title: 'Posts',
         href: '/home',
-        icon: LayoutGrid,
+        icon: PhotoIcon,
+        
     },
     {
         title: 'Friends',
         href: '/friends',
-        icon: LayoutGrid,
+        icon: Users,
     },
     {
         title: 'Groups',
-        icon: Folder,
+        icon: UserGroupIcon,
         href:'/groups',
-        children: [
-            { title: 'My Groups', href: '/groups/mine' },
-            { title: 'Explore Groups', href: '/groups/explore' },
-        ],
+       
     },
 ];
 
